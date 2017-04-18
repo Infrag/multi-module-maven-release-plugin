@@ -26,12 +26,15 @@ public class Reactor {
         return modulesInBuildOrder;
     }
 
-    public static Reactor fromProjects(Log log, LocalGitRepo gitRepo, MavenProject rootProject, List<MavenProject> projects, Long buildNumber, List<String> modulesToForceRelease, NoChangesAction actionWhenNoChangesDetected) throws ValidationException, GitAPIException, MojoExecutionException {
-        DiffDetector detector = new TreeWalkingDiffDetector(gitRepo.git.getRepository());
+    public static Reactor fromProjects(Log log, LocalGitRepo rooRepo, MavenProject rootProject, List<MavenProject> projects, Long buildNumber, List<String> modulesToForceRelease, NoChangesAction actionWhenNoChangesDetected)
+        throws ValidationException, GitAPIException, MojoExecutionException {
         List<ReleasableModule> modules = new ArrayList<ReleasableModule>();
         VersionNamer versionNamer = new VersionNamer();
         for (MavenProject project : projects) {
             String relativePathToModule = calculateModulePath(rootProject, project);
+
+            LocalGitRepo gitRepo = getRepo(rooRepo, relativePathToModule, project, log);
+            DiffDetector detector = new TreeWalkingDiffDetector(gitRepo.git.getRepository());
             String artifactId = project.getArtifactId();
             String versionWithoutBuildNumber = project.getVersion().replace("-SNAPSHOT", "");
             List<AnnotatedTag> previousTagsForThisModule = AnnotatedTagFinder.tagsForVersion(gitRepo.git, artifactId, versionWithoutBuildNumber);
@@ -61,7 +64,7 @@ public class Reactor {
                         }
                     }
                     if (project.getParent() != null
-                            && (project.getParent().getGroupId().equals(module.getGroupId()) && project.getParent().getArtifactId().equals(module.getArtifactId()))) {
+                        && (project.getParent().getGroupId().equals(module.getGroupId()) && project.getParent().getArtifactId().equals(module.getArtifactId()))) {
                         oneOfTheDependenciesHasChanged = true;
                         changedDependency = project.getParent().getArtifactId();
                         break;
@@ -74,9 +77,9 @@ public class Reactor {
 
             String equivalentVersion = null;
 
-            if(modulesToForceRelease != null && modulesToForceRelease.contains(artifactId)) {
+            if (modulesToForceRelease != null && modulesToForceRelease.contains(artifactId)) {
                 log.info("Releasing " + artifactId + " " + newVersion.releaseVersion() + " as we was asked to forced release.");
-            }else if (oneOfTheDependenciesHasChanged) {
+            } else if (oneOfTheDependenciesHasChanged) {
                 log.info("Releasing " + artifactId + " " + newVersion.releaseVersion() + " as " + changedDependency + " has changed.");
             } else {
                 AnnotatedTag previousTagThatIsTheSameAsHEADForThisModule = hasChangedSinceLastRelease(previousTagsForThisModule, detector, project, relativePathToModule);
@@ -87,7 +90,7 @@ public class Reactor {
                     log.info("Will use version " + newVersion.releaseVersion() + " for " + artifactId + " as it has changed since the last release.");
                 }
             }
-            ReleasableModule module = new ReleasableModule(project, newVersion, equivalentVersion, relativePathToModule);
+            ReleasableModule module = new ReleasableModule(project, newVersion, equivalentVersion, relativePathToModule, gitRepo);
             modules.add(module);
         }
 
@@ -109,6 +112,18 @@ public class Reactor {
         }
 
         return new Reactor(modules);
+    }
+
+    private static LocalGitRepo getRepo(LocalGitRepo rootRepo, String relativePathToModule, MavenProject project, Log log) {
+        try {
+            LocalGitRepo gitRepo = LocalGitRepo.fromDir(relativePathToModule, ReleaseMojo.getRemoteUrlOrNullIfNoneSet(project.getOriginalModel().getScm(), project.getModel().getScm()));
+            gitRepo.errorIfNotClean();
+            return gitRepo;
+        } catch (Exception ex) {
+            log.info("Using root project repo for subproject: " + project.getName());
+            log.debug(ex);
+            return rootRepo;
+        }
     }
 
     private static Collection<Long> getRemoteBuildNumbers(LocalGitRepo gitRepo, String artifactId, String versionWithoutBuildNumber) throws GitAPIException {

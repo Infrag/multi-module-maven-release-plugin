@@ -1,5 +1,6 @@
 package scaffolding;
 
+import com.github.danielflower.mavenplugins.release.LocalGitRepo;
 import com.github.danielflower.mavenplugins.release.ReleasableModule;
 import com.github.danielflower.mavenplugins.release.ValidationException;
 import com.github.danielflower.mavenplugins.release.VersionNamer;
@@ -12,6 +13,7 @@ public class ReleasableModuleBuilder {
     private long buildNumber = 123;
     private String equivalentVersion = null;
     private String relativePathToModule = ".";
+    private LocalGitRepo repo = null;
 
     public ReleasableModuleBuilder withBuildNumber(long buildNumber) {
         this.buildNumber = buildNumber;
@@ -44,7 +46,7 @@ public class ReleasableModuleBuilder {
     }
 
     public ReleasableModule build() throws ValidationException {
-        return new ReleasableModule(project, versionNamer.name(project.getVersion(), buildNumber, null), equivalentVersion, relativePathToModule);
+        return new ReleasableModule(project, versionNamer.name(project.getVersion(), buildNumber, null), equivalentVersion, relativePathToModule, repo);
     }
 
     public static ReleasableModuleBuilder aModule() {

@@ -37,7 +37,7 @@ public class NextMojo extends BaseMojo {
             if (reactor == null) {
                 return;
             }
-            ReleaseMojo.figureOutTagNamesAndThrowIfAlreadyExists(reactor.getModulesInBuildOrder(), repo, modulesToRelease);
+            ReleaseMojo.figureOutTagNamesAndThrowIfAlreadyExists(reactor.getModulesInBuildOrder(), modulesToRelease);
 
         } catch (ValidationException e) {
             printBigErrorMessageAndThrow(log, e.getMessage(), e.getMessages());

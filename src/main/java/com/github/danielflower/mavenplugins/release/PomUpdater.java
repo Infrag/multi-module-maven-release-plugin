@@ -1,18 +1,19 @@
 package com.github.danielflower.mavenplugins.release;
 
+import org.apache.maven.model.Dependency;
+import org.apache.maven.model.Model;
+import org.apache.maven.model.Plugin;
+import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.logging.Log;
+import org.apache.maven.project.MavenProject;
+import org.codehaus.plexus.util.WriterFactory;
+
 import java.io.File;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
-
-import org.apache.maven.model.Dependency;
-import org.apache.maven.model.Model;
-import org.apache.maven.model.Plugin;
-import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
-import org.apache.maven.plugin.logging.Log;
-import org.apache.maven.project.MavenProject;
-import org.codehaus.plexus.util.WriterFactory;
 
 public class PomUpdater {
 
@@ -24,9 +25,8 @@ public class PomUpdater {
         this.reactor = reactor;
     }
 
-    public UpdateResult updateVersion() {
-        List<File> changedPoms = new ArrayList<File>();
-        List<String> errors = new ArrayList<String>();
+    public UpdateResult updateVersion() throws MojoExecutionException, ValidationException {
+        List<ReleasableModule> alteredModules = new ArrayList<>();
         for (ReleasableModule module : reactor.getModulesInBuildOrder()) {
             try {
                 MavenProject project = module.getProject();
@@ -35,10 +35,12 @@ public class PomUpdater {
                 }
 
                 List<String> errorsForCurrentPom = alterModel(project, module.getNewVersion());
-                errors.addAll(errorsForCurrentPom);
+                module.setErrors(errorsForCurrentPom);
 
                 File pom = project.getFile().getCanonicalFile();
-                changedPoms.add(pom);
+                module.setChangedPom(pom);
+                alteredModules.add(module);
+
                 Writer fileWriter = WriterFactory.newXmlWriter(pom);
 
                 Model originalModel = project.getOriginalModel();
@@ -49,24 +51,51 @@ public class PomUpdater {
                     fileWriter.close();
                 }
             } catch (Exception e) {
-                return new UpdateResult(changedPoms, errors, e);
+                return new UpdateResult(log, alteredModules, e);
             }
         }
-        return new UpdateResult(changedPoms, errors, null);
+        return new UpdateResult(log, alteredModules, null);
     }
 
     public static class UpdateResult {
-        public final List<File> alteredPoms;
-        public final List<String> dependencyErrors;
+        public final List<ReleasableModule> alteredModules;
         public final Exception unexpectedException;
+        public final Log log;
 
-        public UpdateResult(List<File> alteredPoms, List<String> dependencyErrors, Exception unexpectedException) {
-            this.alteredPoms = alteredPoms;
-            this.dependencyErrors = dependencyErrors;
+        public UpdateResult(Log log, List<ReleasableModule> alteredModules, Exception unexpectedException) throws ValidationException, MojoExecutionException {
+            this.alteredModules = alteredModules;
             this.unexpectedException = unexpectedException;
+            this.log = log;
+            if (!success()) {
+                revertChanges(log);
+            }
         }
+
         public boolean success() {
-            return (dependencyErrors.size() == 0) && (unexpectedException == null);
+            return (alteredModules == null || alteredModules.size() == 0) && (unexpectedException == null);
+        }
+
+        public void revertChanges(Log log) throws MojoExecutionException, ValidationException {
+            List<String> errors = new ArrayList<>();
+            if (!success()) {
+                log.info("Going to revert changes because there was an error.");
+                for (ReleasableModule module : alteredModules) {
+                    module.revertChanges(log);
+                    errors.addAll(module.getErrors());
+                }
+                if (unexpectedException != null) {
+                    throw new ValidationException("Unexpected exception while setting the release versions in the pom", unexpectedException);
+                } else {
+                    String summary = "Cannot release with references to snapshot dependencies";
+                    List<String> messages = new ArrayList<String>();
+                    messages.add(summary);
+                    messages.add("The following dependency errors were found:");
+                    for (String dependencyError : errors) {
+                        messages.add(" * " + dependencyError);
+                    }
+                    throw new ValidationException(summary, messages);
+                }
+            }
         }
     }
 
@@ -99,7 +128,7 @@ public class PomUpdater {
                 } catch (UnresolvedSnapshotDependencyException e) {
                     errors.add(searchingFrom + " references dependency " + e.artifactId + " " + e.version);
                 }
-            }else
+            } else
                 log.debug(" Dependency on " + dependency.getArtifactId() + " kept at version " + dependency.getVersion());
         }
         for (Plugin plugin : project.getModel().getBuild().getPlugins()) {
@@ -112,13 +141,13 @@ public class PomUpdater {
         }
         return errors;
     }
-    
-	private String resolveVersion(String version, Properties projectProperties) {
-		if (version != null && version.startsWith("${")) {
-			return projectProperties.getProperty(version.replace("${", "").replace("}", ""), version);
-		}
-		return version;
-	}
+
+    private String resolveVersion(String version, Properties projectProperties) {
+        if (version != null && version.startsWith("${")) {
+            return projectProperties.getProperty(version.replace("${", "").replace("}", ""), version);
+        }
+        return version;
+    }
 
     private static boolean isMultiModuleReleasePlugin(Plugin plugin) {
         return plugin.getGroupId().equals("com.github.danielflower.mavenplugins") && plugin.getArtifactId().equals("multi-module-maven-release-plugin");

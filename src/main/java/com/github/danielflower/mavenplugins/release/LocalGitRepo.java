@@ -2,6 +2,7 @@ package com.github.danielflower.mavenplugins.release;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
+import org.apache.maven.project.MavenProject;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.LsRemoteCommand;
 import org.eclipse.jgit.api.PushCommand;
@@ -72,16 +73,32 @@ public class LocalGitRepo {
         boolean hasErrors = false;
         File workTree = workingDir();
         for (File changedFile : changedFiles) {
-            try {
-                String pathRelativeToWorkingTree = Repository.stripWorkDir(workTree, changedFile);
-                git.checkout().addPath(pathRelativeToWorkingTree).call();
-            } catch (Exception e) {
-                hasErrors = true;
-                log.error("Unable to revert changes to " + changedFile + " - you may need to manually revert this file. Error was: " + e.getMessage());
-            }
+            hasErrors = revertFile(log, changedFile, hasErrors, workTree);
         }
         hasReverted = true;
         return !hasErrors;
+    }
+
+    public boolean revertChanges(Log log, File changedFile) throws MojoExecutionException {
+        if (hasReverted) {
+            return true;
+        }
+        boolean hasErrors = false;
+        File workTree = workingDir();
+        hasErrors = revertFile(log, changedFile, hasErrors, workTree);
+        hasReverted = true;
+        return !hasErrors;
+    }
+
+    private boolean revertFile(Log log, File changedFile, boolean hasErrors, File workTree) {
+        try {
+            String pathRelativeToWorkingTree = Repository.stripWorkDir(workTree, changedFile);
+            git.checkout().addPath(pathRelativeToWorkingTree).call();
+        } catch (Exception e) {
+            hasErrors = true;
+            log.error("Unable to revert changes to " + changedFile + " - you may need to manually revert this file. Error was: " + e.getMessage());
+        }
+        return hasErrors;
     }
 
     private File workingDir() throws MojoExecutionException {
@@ -114,14 +131,20 @@ public class LocalGitRepo {
         return tagRef;
     }
 
+    public static LocalGitRepo fromModule(ReleasableModule module) throws ValidationException {
+        return LocalGitRepo.fromDir(module.getRelativePathToModule(),
+            ReleaseMojo.getRemoteUrlOrNullIfNoneSet(module.getProject().getOriginalModel().getScm(), module.getProject().getModel().getScm()));
+    }
+
     /**
      * Uses the current working dir to open the Git repository.
+     *
      * @param remoteUrl The value in pom.scm.connection or null if none specified, in which case the default remote is used.
      * @throws ValidationException if anything goes wrong
      */
-    public static LocalGitRepo fromCurrentDir(String remoteUrl) throws ValidationException {
+    public static LocalGitRepo fromDir(String directory, String remoteUrl) throws ValidationException {
         Git git;
-        File gitDir = new File(".");
+        File gitDir = new File(directory);
         try {
             git = Git.open(gitDir);
         } catch (RepositoryNotFoundException rnfe) {
@@ -146,8 +169,18 @@ public class LocalGitRepo {
         return new LocalGitRepo(git, remoteUrl);
     }
 
+    /**
+     * Uses the current working dir to open the Git repository.
+     *
+     * @param remoteUrl The value in pom.scm.connection or null if none specified, in which case the default remote is used.
+     * @throws ValidationException if anything goes wrong
+     */
+    public static LocalGitRepo fromCurrentDir(String remoteUrl) throws ValidationException {
+        return fromDir(".", remoteUrl);
+    }
+
     private static File getGitRootIfItExistsInOneOfTheParentDirectories(File candidateDir) {
-        while (candidateDir != null && /* HACK ATTACK! Maybe.... */ !candidateDir.getName().equals("target") ) {
+        while (candidateDir != null && /* HACK ATTACK! Maybe.... */ !candidateDir.getName().equals("target")) {
             if (new File(candidateDir, ".git").isDirectory()) {
                 return candidateDir;
             }
@@ -175,6 +208,20 @@ public class LocalGitRepo {
             }
         }
         return results;
+    }
+
+    public boolean tagExists(AnnotatedTag tagToSearchFor) throws GitAPIException {
+        return tagExists(tagToSearchFor.name());
+    }
+
+    public boolean tagExists(String tagNameToSearchFor) throws GitAPIException {
+        Collection<Ref> remoteTags = allRemoteTags();
+        for (Ref remoteTag : remoteTags) {
+            if (remoteTag.getName().equals("refs/tags/" + tagNameToSearchFor)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public Collection<Ref> allRemoteTags() throws GitAPIException {
