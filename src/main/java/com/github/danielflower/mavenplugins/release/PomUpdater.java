@@ -59,29 +59,30 @@ public class PomUpdater {
 
     public static class UpdateResult {
         public final List<ReleasableModule> alteredModules;
+        public final List<String> moduleErrors = new ArrayList<>();
         public final Exception unexpectedException;
         public final Log log;
 
         public UpdateResult(Log log, List<ReleasableModule> alteredModules, Exception unexpectedException) throws ValidationException, MojoExecutionException {
             this.alteredModules = alteredModules;
+            for (ReleasableModule module : alteredModules) {
+                if (module.getErrors() != null) {
+                    moduleErrors.addAll(module.getErrors());
+                }
+            }
             this.unexpectedException = unexpectedException;
             this.log = log;
-            if (!success()) {
-                revertChanges(log);
-            }
         }
 
         public boolean success() {
-            return (alteredModules == null || alteredModules.size() == 0) && (unexpectedException == null);
+            return (moduleErrors == null || moduleErrors.isEmpty()) && (unexpectedException == null);
         }
 
         public void revertChanges(Log log) throws MojoExecutionException, ValidationException {
-            List<String> errors = new ArrayList<>();
             if (!success()) {
                 log.info("Going to revert changes because there was an error.");
                 for (ReleasableModule module : alteredModules) {
                     module.revertChanges(log);
-                    errors.addAll(module.getErrors());
                 }
                 if (unexpectedException != null) {
                     throw new ValidationException("Unexpected exception while setting the release versions in the pom", unexpectedException);
@@ -90,7 +91,7 @@ public class PomUpdater {
                     List<String> messages = new ArrayList<String>();
                     messages.add(summary);
                     messages.add("The following dependency errors were found:");
-                    for (String dependencyError : errors) {
+                    for (String dependencyError : moduleErrors) {
                         messages.add(" * " + dependencyError);
                     }
                     throw new ValidationException(summary, messages);

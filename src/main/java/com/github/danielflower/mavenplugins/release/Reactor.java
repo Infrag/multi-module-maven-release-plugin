@@ -10,6 +10,7 @@ import org.eclipse.jgit.lib.Repository;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -159,7 +160,7 @@ public class Reactor {
         } catch (IOException e) {
             throw new MojoExecutionException("Could not find directory paths for maven project", e);
         }
-        String relativePathToModule = Repository.stripWorkDir(projectRoot, moduleRoot);
+        String relativePathToModule = projectRoot.toPath().relativize(moduleRoot.toPath()).toString();
         if (relativePathToModule.length() == 0) {
             relativePathToModule = ".";
         }

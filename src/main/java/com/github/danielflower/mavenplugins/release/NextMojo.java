@@ -14,6 +14,7 @@ import static java.util.Arrays.asList;
 /**
  * Logs the versions of the modules that the releaser will release on the next release. Does not run the build nor
  * tag the repo.
+ *
  * @since 1.4.0
  */
 @Mojo(
@@ -40,7 +41,7 @@ public class NextMojo extends BaseMojo {
             ReleaseMojo.figureOutTagNamesAndThrowIfAlreadyExists(reactor.getModulesInBuildOrder(), modulesToRelease);
 
         } catch (ValidationException e) {
-            printBigErrorMessageAndThrow(log, e.getMessage(), e.getMessages());
+            printBigErrorMessageAndThrow(log, e.getMessage(), e.getMessages(), e);
         } catch (GitAPIException gae) {
 
             StringWriter sw = new StringWriter();
@@ -49,7 +50,7 @@ public class NextMojo extends BaseMojo {
 
             printBigErrorMessageAndThrow(log, "Could not release due to a Git error",
                 asList("There was an error while accessing the Git repository. The error returned from git was:",
-                    gae.getMessage(), "Stack trace:", exceptionAsString));
+                    gae.getMessage(), "Stack trace:", exceptionAsString), gae);
         }
     }
 

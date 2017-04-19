@@ -151,7 +151,7 @@ public class ReleaseMojo extends BaseMojo {
 
 
         } catch (ValidationException e) {
-            printBigErrorMessageAndThrow(log, e.getMessage(), e.getMessages());
+            printBigErrorMessageAndThrow(log, e.getMessage(), e.getMessages(), e);
         } catch (GitAPIException gae) {
 
             StringWriter sw = new StringWriter();
@@ -160,14 +160,14 @@ public class ReleaseMojo extends BaseMojo {
 
             printBigErrorMessageAndThrow(log, "Could not release due to a Git error",
                 asList("There was an error while accessing the Git repository. The error returned from git was:",
-                    gae.getMessage(), "Stack trace:", exceptionAsString));
+                    gae.getMessage(), "Stack trace:", exceptionAsString), gae);
         } catch (IOException e) {
             StringWriter sw = new StringWriter();
             e.printStackTrace(new PrintWriter(sw));
             String exceptionAsString = sw.toString();
 
             printBigErrorMessageAndThrow(log, e.getMessage(),
-                asList("There was an error while creating temporary settings file. The error was:", e.getMessage(), "Stack trace:", exceptionAsString));
+                asList("There was an error while creating temporary settings file. The error was:", e.getMessage(), "Stack trace:", exceptionAsString), e);
         }
     }
 
