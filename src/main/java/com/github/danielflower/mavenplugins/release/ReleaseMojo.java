@@ -100,6 +100,10 @@ public class ReleaseMojo extends BaseMojo {
     private boolean pushTags;
 
 
+    @Parameter(alias = "revertChanges", defaultValue = "true", property = "revert")
+    private boolean revertChanges;
+
+
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         Log log = getLog();
@@ -144,7 +148,9 @@ public class ReleaseMojo extends BaseMojo {
                 invoker.setReleaseProfiles(releaseProfiles);
                 invoker.setSkipTests(skipTests);
                 invoker.runMavenBuild(reactor);
-                revertChanges(log, updateResult.alteredModules, true); // throw if you can't revert as that is the root problem
+                if (revertChanges) {
+                    revertChanges(log, updateResult.alteredModules, true); // throw if you can't revert as that is the root problem
+                }
             } finally {
                 revertChanges(log, updateResult.alteredModules, false); // warn if you can't revert but keep throwing the original exception so the root cause isn't lost
             }

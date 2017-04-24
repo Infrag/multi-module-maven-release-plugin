@@ -113,6 +113,10 @@ public class LocalGitRepo {
         return GitHelper.hasLocalTag(git, tagName);
     }
 
+    public void commitChanges() throws GitAPIException {
+        git.commit().setAll(true).setMessage("Incremented versions").call();
+    }
+
     public void tagRepoAndPush(AnnotatedTag tag) throws GitAPIException {
         Ref tagRef = tagRepo(tag);
         pushTag(tagRef);

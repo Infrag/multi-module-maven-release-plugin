@@ -14,6 +14,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 public class Reactor {
 
@@ -47,6 +48,8 @@ public class Reactor {
                     previousBuildNumbers.add(previousTag.buildNumber());
                 }
             }
+            Optional<Double> pom;
+            pom.
 
             Collection<Long> remoteBuildNumbers = getRemoteBuildNumbers(gitRepo, artifactId, versionWithoutBuildNumber);
             previousBuildNumbers.addAll(remoteBuildNumbers);
