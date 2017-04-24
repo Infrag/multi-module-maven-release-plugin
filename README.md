@@ -7,7 +7,7 @@ Full usage details, FAQs, background and more are available on the
 Development
 ===========
 
-[![Build Status](https://travis-ci.org/danielflower/multi-module-maven-release-plugin.svg?branch=master)](https://travis-ci.org/danielflower/multi-module-maven-release-plugin)
+Build Status TODO
 
 Contributing
 ------------

@@ -35,6 +35,11 @@ public class MavenCompatibilityTest {
     }
 
     @Test
+    public void maven_3_1_1() throws Exception {
+        buildProjectWithMavenVersion("3.1.1");
+    }
+
+    @Test
     public void maven_3_2_1() throws Exception {
         buildProjectWithMavenVersion("3.2.1");
     }
