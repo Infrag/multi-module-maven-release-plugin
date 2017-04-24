@@ -122,12 +122,12 @@ public class ReleaseMojo extends BaseMojo {
             PomUpdater.UpdateResult updateResult = updatePomsAndReturnResult(log, reactor);
             for (ReleasableModule module : reactor.getModulesInBuildOrder()) {
 
-                module.figureOutTagNamesAndThrowIfAlreadyExists(modulesToRelease);
+                AnnotatedTag tag = module.figureOutTagNamesAndThrowIfAlreadyExists(getLog(), modulesToRelease);
 
                 // Do this before running the maven build in case the build uploads some artifacts and then fails. If it is
                 // not tagged in a half-failed build, then subsequent releases will re-use a version that is already in Nexus
                 // and so fail. The downside is that failed builds result in tags being pushed.
-                if (updateResult.success()) {
+                if (updateResult.success() && tag != null) {
                     module.tagAndPushRepo(log, pushTags);
                 }
             }

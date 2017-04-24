@@ -48,8 +48,6 @@ public class Reactor {
                     previousBuildNumbers.add(previousTag.buildNumber());
                 }
             }
-            Optional<Double> pom;
-            pom.
 
             Collection<Long> remoteBuildNumbers = getRemoteBuildNumbers(gitRepo, artifactId, versionWithoutBuildNumber);
             previousBuildNumbers.addAll(remoteBuildNumbers);

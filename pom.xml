@@ -4,14 +4,14 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.github.danielflower.mavenplugins</groupId>
-    <artifactId>multi-module-maven-release-plugin</artifactId>
-    <version>2.1-SNAPSHOT</version> <!-- When changing also update scaffolding.TestProject.PLUGIN_VERSION_FOR_TESTS and add to src/site/markdown/changelog.md -->
+    <groupId>com.github.infragile.mavenplugins</groupId>
+    <artifactId>multi-module-release-maven-plugin</artifactId>
+    <version>2.2-SNAPSHOT</version> <!-- When changing also update scaffolding.TestProject.PLUGIN_VERSION_FOR_TESTS and add to src/site/markdown/changelog.md -->
 
     <name>The Multi Module Maven Release Plugin</name>
     <description>A maven release plugin built for multi-maven-module git repositories allowing continuous deployment
     </description>
-    <url>https://github.com/danielflower/maven-multi-module-releaser</url>
+    <url>https://github.com/Infrag/multi-module-release-maven-plugin</url>
     <packaging>maven-plugin</packaging>
     <prerequisites>
         <!-- if this changes, please update the MavenCompatibilityTest -->
@@ -24,22 +24,12 @@
         <jsch.agentproxy.version>0.0.9</jsch.agentproxy.version>
     </properties>
 
-    <ciManagement>
-        <system>travis-ci</system>
-        <url>https://travis-ci.org/danielflower/multi-module-maven-release-plugin</url>
-    </ciManagement>
-
     <scm>
-        <url>https://github.com/danielflower/multi-module-maven-release-plugin</url>
-        <connection>scm:git:git@github.com:danielflower/multi-module-maven-release-plugin.git</connection>
+        <url>https://github.com/Infrag/multi-module-maven-release-plugin</url>
+        <connection>scm:git:git@github.com:Infrag/multi-module-maven-release-plugin.git</connection>
     </scm>
 
     <inceptionYear>2015</inceptionYear>
-
-    <issueManagement>
-        <system>GitHub</system>
-        <url>https://github.com/danielflower/multi-module-maven-release-plugin/issues</url>
-    </issueManagement>
 
     <licenses>
         <license>
@@ -53,6 +43,14 @@
         <developer>
             <name>Daniel Flower</name>
             <organizationUrl>https://github.com/danielflower</organizationUrl>
+        </developer>
+        <developer>
+            <name>Ondřej Božek</name>
+            <organizationUrl>https://github.com/Infrag</organizationUrl>
+        </developer>
+        <developer>
+            <name>Jan Martinák</name>
+            <organizationUrl>https://github.com/jmartinak</organizationUrl>
         </developer>
     </developers>
 
@@ -191,8 +189,8 @@
         <plugins>
 
             <plugin>
-                <groupId>com.github.danielflower.mavenplugins</groupId>
-                <artifactId>multi-module-maven-release-plugin</artifactId>
+                <groupId>com.github.infragile.mavenplugins</groupId>
+                <artifactId>multi-module-release-maven-plugin</artifactId>
                 <version>${project.version}</version>
                 <configuration>
                     <releaseGoals>
@@ -279,13 +277,6 @@
                     <plugin>
                         <groupId>org.sonatype.plugins</groupId>
                         <artifactId>nexus-staging-maven-plugin</artifactId>
-                        <version>1.6.7</version>
-                        <extensions>true</extensions>
-                        <configuration>
-                            <serverId>ossrh</serverId>
-                            <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-                            <autoReleaseAfterClose>true</autoReleaseAfterClose>
-                        </configuration>
                     </plugin>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
@@ -351,12 +342,12 @@
 
     <distributionManagement>
         <snapshotRepository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+            <id>cf-nexus</id>
+            <url>https://devops.dev.aws.cleverfarm.cz/nexus/repository/maven-snapshots/</url>
         </snapshotRepository>
         <repository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+            <id>cf-nexus</id>
+            <url>https://devops.dev.aws.cleverfarm.cz/nexus/repository/maven-releases/</url>
         </repository>
     </distributionManagement>
 

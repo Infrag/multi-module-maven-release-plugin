@@ -34,10 +34,11 @@ public class ReleasableModule {
         this.repo = repo;
     }
 
-    public AnnotatedTag figureOutTagNamesAndThrowIfAlreadyExists(List<String> modulesToRelease)
+    public AnnotatedTag figureOutTagNamesAndThrowIfAlreadyExists(Log log, List<String> modulesToRelease)
         throws GitAPIException, ValidationException {
         annotatedTag = null;
         if (!willBeReleased()) {
+            log.info("No need to release the module, skipping...");
             return null;
         }
         if (modulesToRelease == null || modulesToRelease.size() == 0 || isOneOf(modulesToRelease)) {
