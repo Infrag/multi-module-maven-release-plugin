@@ -6,7 +6,7 @@
 
     <groupId>com.github.infragile.mavenplugins</groupId>
     <artifactId>multi-module-release-maven-plugin</artifactId>
-    <version>2.2-SNAPSHOT</version> <!-- When changing also update scaffolding.TestProject.PLUGIN_VERSION_FOR_TESTS and add to src/site/markdown/changelog.md -->
+    <version>2.4</version> <!-- When changing also update scaffolding.TestProject.PLUGIN_VERSION_FOR_TESTS and add to src/site/markdown/changelog.md -->
 
     <name>The Multi Module Maven Release Plugin</name>
     <description>A maven release plugin built for multi-maven-module git repositories allowing continuous deployment
