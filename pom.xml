@@ -26,8 +26,8 @@
     </properties>
 
     <scm>
-        <url>https://github.com/Infrag/multi-module-maven-release-plugin</url>
-        <connection>scm:git:git@github.com:Infrag/multi-module-maven-release-plugin.git</connection>
+        <url>https://github.com/Infrag/multi-module-release-maven-plugin.git</url>
+        <connection>scm:git:git@github.com:Infrag/multi-module-release-maven-plugin.git</connection>
     </scm>
 
     <inceptionYear>2015</inceptionYear>

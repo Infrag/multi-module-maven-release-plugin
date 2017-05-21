@@ -151,7 +151,7 @@ public class PomUpdater {
     }
 
     private static boolean isMultiModuleReleasePlugin(Plugin plugin) {
-        return plugin.getGroupId().equals("com.github.danielflower.mavenplugins") && plugin.getArtifactId().equals("multi-module-maven-release-plugin");
+        return plugin.getGroupId().equals("com.github.infragile.mavenplugins") && plugin.getArtifactId().equals("multi-module-release-maven-plugin");
     }
 
     private boolean isSnapshot(String version) {
