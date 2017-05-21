@@ -1,5 +1,6 @@
 package com.github.danielflower.mavenplugins.release;
 
+import com.github.danielflower.mavenplugins.release.report.ChangeData;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.project.MavenProject;
@@ -23,15 +24,17 @@ public class ReleasableModule {
     private LocalGitRepo repo;
     private List<String> errors;
     private AnnotatedTag annotatedTag;
+    private ChangeData changeData;
 
 
-    public ReleasableModule(MavenProject project, VersionName version, String equivalentVersion, String relativePathToModule, LocalGitRepo repo) {
+    public ReleasableModule(MavenProject project, VersionName version, String equivalentVersion, String relativePathToModule, LocalGitRepo repo, ChangeData changeData) {
         this.project = project;
         this.version = version;
         this.equivalentVersion = equivalentVersion;
         this.relativePathToModule = relativePathToModule;
         this.tagName = project.getArtifactId() + "-" + version.releaseVersion();
         this.repo = repo;
+        this.changeData = changeData;
     }
 
     public AnnotatedTag figureOutTagNamesAndThrowIfAlreadyExists(Log log, List<String> modulesToRelease)
@@ -127,7 +130,7 @@ public class ReleasableModule {
     }
 
     public ReleasableModule createReleasableVersion() {
-        return new ReleasableModule(project, version, null, relativePathToModule, repo);
+        return new ReleasableModule(project, version, null, relativePathToModule, repo, changeData);
     }
 
     public LocalGitRepo getRepo() {
@@ -156,5 +159,17 @@ public class ReleasableModule {
 
     public boolean revertChanges(Log log) throws MojoExecutionException {
         return getRepo().revertChanges(log, getChangedPom());
+    }
+
+    public boolean revertCommit(Log log) throws MojoExecutionException {
+        return getRepo().revertCommit(log, getChangedPom());
+    }
+
+    public ChangeData getChangeData() {
+        return changeData;
+    }
+
+    public void setChangeData(ChangeData changeData) {
+        this.changeData = changeData;
     }
 }

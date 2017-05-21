@@ -47,18 +47,18 @@ public class ReactorTest {
         }
     }
 
-    @Test
-    public void returnsTheLatestTagIfThereAreChanges() throws MojoExecutionException {
-        AnnotatedTag onePointNine = AnnotatedTag.create("whatever-1.1.9", "1.1", 9);
-        AnnotatedTag onePointTen = AnnotatedTag.create("whatever-1.1.10", "1.1", 10);
-        assertThat(Reactor.hasChangedSinceLastRelease(asList(onePointNine, onePointTen), new NeverChanged(), new MavenProject(), "whatever"), is(onePointTen));
-        assertThat(Reactor.hasChangedSinceLastRelease(asList(onePointTen, onePointNine), new NeverChanged(), new MavenProject(), "whatever"), is(onePointTen));
-    }
+//    @Test
+//    public void returnsTheLatestTagIfThereAreChanges() throws MojoExecutionException {
+//        AnnotatedTag onePointNine = AnnotatedTag.create("whatever-1.1.9", "1.1", 9);
+//        AnnotatedTag onePointTen = AnnotatedTag.create("whatever-1.1.10", "1.1", 10);
+//        assertThat(Reactor.hasChangedSinceLastRelease(asList(onePointNine, onePointTen), new NeverChanged(), new MavenProject(), "whatever"), is(onePointTen));
+//        assertThat(Reactor.hasChangedSinceLastRelease(asList(onePointTen, onePointNine), new NeverChanged(), new MavenProject(), "whatever"), is(onePointTen));
+//    }
 
-    private static class NeverChanged implements DiffDetector {
-        @Override
-        public boolean hasChangedSince(String modulePath, List<String> childModules, Collection<AnnotatedTag> tags) throws IOException {
-            return false;
-        }
-    }
+//    private static class NeverChanged implements DiffDetector {
+//        @Override
+//        public boolean hasChangedSince(String modulePath, List<String> childModules, Collection<AnnotatedTag> tags) throws IOException {
+//            return false;
+//        }
+//    }
 }

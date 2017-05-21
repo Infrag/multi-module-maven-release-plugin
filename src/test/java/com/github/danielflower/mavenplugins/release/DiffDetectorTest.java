@@ -24,9 +24,9 @@ public class DiffDetectorTest {
 
         DiffDetector detector = new TreeWalkingDiffDetector(project.local.getRepository());
 
-        assertThat(detector.hasChangedSince("core-utils", noChildModules(), asList(tag2)), is(false));
-        assertThat(detector.hasChangedSince("console-app", noChildModules(), asList(tag2)), is(true));
-        assertThat(detector.hasChangedSince("console-app", noChildModules(), asList(tag3)), is(false));
+        assertThat(detector.hasChangedSince("core-utils", noChildModules(), asList(tag2)).hasChanged(), is(false));
+        assertThat(detector.hasChangedSince("console-app", noChildModules(), asList(tag2)).hasChanged(), is(true));
+        assertThat(detector.hasChangedSince("console-app", noChildModules(), asList(tag3)).hasChanged(), is(false));
     }
 
     @Test
@@ -35,10 +35,10 @@ public class DiffDetectorTest {
         AnnotatedTag tag1 = saveFileInModule(simple, ".", "1.0", 1);
         simple.commitRandomFile(".");
         DiffDetector detector = new TreeWalkingDiffDetector(simple.local.getRepository());
-        assertThat(detector.hasChangedSince(".", noChildModules(), asList(tag1)), is(true));
+        assertThat(detector.hasChangedSince(".", noChildModules(), asList(tag1)).hasChanged(), is(true));
 
         AnnotatedTag tag2 = saveFileInModule(simple, ".", "1.0", 2);
-        assertThat(detector.hasChangedSince(".", noChildModules(), asList(tag2)), is(false));
+        assertThat(detector.hasChangedSince(".", noChildModules(), asList(tag2)).hasChanged(), is(false));
     }
 
     @Test
@@ -51,7 +51,7 @@ public class DiffDetectorTest {
         project.commitRandomFile("console-app");
 
         DiffDetector detector = new TreeWalkingDiffDetector(project.local.getRepository());
-        assertThat(detector.hasChangedSince("console-app", noChildModules(), asList(tag3)), is(true));
+        assertThat(detector.hasChangedSince("console-app", noChildModules(), asList(tag3)).hasChanged(), is(true));
     }
 
     @Test
@@ -64,7 +64,7 @@ public class DiffDetectorTest {
         project.commitRandomFile("console-app");
 
         DiffDetector detector = new TreeWalkingDiffDetector(project.local.getRepository());
-        assertThat(detector.hasChangedSince("console-app", asList("console-app"), asList(tag3)), is(false));
+        assertThat(detector.hasChangedSince("console-app", asList("console-app"), asList(tag3)).hasChanged(), is(false));
     }
 
 

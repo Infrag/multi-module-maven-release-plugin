@@ -2,11 +2,7 @@ package com.github.danielflower.mavenplugins.release;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
-import org.apache.maven.project.MavenProject;
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.LsRemoteCommand;
-import org.eclipse.jgit.api.PushCommand;
-import org.eclipse.jgit.api.Status;
+import org.eclipse.jgit.api.*;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.errors.RepositoryNotFoundException;
 import org.eclipse.jgit.lib.Ref;
@@ -79,6 +75,30 @@ public class LocalGitRepo {
         return !hasErrors;
     }
 
+    public boolean revertCommit(Log log, List<File> changedFiles) throws MojoExecutionException {
+        if (hasReverted) {
+            return true;
+        }
+        boolean hasErrors = false;
+        File workTree = workingDir();
+        for (File changedFile : changedFiles) {
+            hasErrors = revertCommitedFile(log, changedFile, hasErrors, workTree);
+        }
+        hasReverted = true;
+        return !hasErrors;
+    }
+
+    public boolean revertCommit(Log log, File changedFile) throws MojoExecutionException {
+        if (hasReverted) {
+            return true;
+        }
+        boolean hasErrors = false;
+        File workTree = workingDir();
+        hasErrors = revertCommitedFile(log, changedFile, hasErrors, workTree);
+        hasReverted = true;
+        return !hasErrors;
+    }
+
     public boolean revertChanges(Log log, File changedFile) throws MojoExecutionException {
         if (hasReverted) {
             return true;
@@ -88,6 +108,17 @@ public class LocalGitRepo {
         hasErrors = revertFile(log, changedFile, hasErrors, workTree);
         hasReverted = true;
         return !hasErrors;
+    }
+
+    private boolean revertCommitedFile(Log log, File changedFile, boolean hasErrors, File workTree) {
+        try {
+            String pathRelativeToWorkingTree = Repository.stripWorkDir(workTree, changedFile);
+            git.reset().setRef("HEAD~1").setMode(ResetCommand.ResetType.HARD).addPath(pathRelativeToWorkingTree).call();
+        } catch (Exception e) {
+            hasErrors = true;
+            log.error("Unable to revert changes to " + changedFile + " - you may need to manually revert this file. Error was: " + e.getMessage());
+        }
+        return hasErrors;
     }
 
     private boolean revertFile(Log log, File changedFile, boolean hasErrors, File workTree) {

@@ -1,5 +1,6 @@
 package com.github.danielflower.mavenplugins.release;
 
+import com.github.danielflower.mavenplugins.release.report.ChangeData;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
@@ -11,6 +12,7 @@ import org.eclipse.jgit.treewalk.filter.TreeFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 
 public class TreeWalkingDiffDetector implements DiffDetector {
@@ -21,14 +23,25 @@ public class TreeWalkingDiffDetector implements DiffDetector {
         this.repo = repo;
     }
 
-    public boolean hasChangedSince(String modulePath, java.util.List<String> childModules, Collection<AnnotatedTag> tags) throws IOException {
+    public ChangeData hasChangedSince(String modulePath, java.util.List<String> childModules, Collection<AnnotatedTag> tags) throws IOException {
         RevWalk walk = new RevWalk(repo);
         try {
-            walk.setRetainBody(false);
-            walk.markStart(walk.parseCommit(repo.getRef("HEAD").getObjectId()));
-            filterOutOtherModulesChanges(modulePath, childModules, walk);
+            walk.setRetainBody(true);
+            walk.markStart(walk.parseCommit(repo.exactRef("HEAD").getObjectId()));
+//            filterOutOtherModulesChanges(modulePath, childModules, walk);
             stopWalkingWhenTheTagsAreHit(tags, walk);
-            return walk.iterator().hasNext();
+            ChangeData result = new ChangeData();
+            Iterator<RevCommit> it = walk.iterator();
+            while (it.hasNext()) {
+                RevCommit cm = it.next();
+                if (cm != null) {
+                    walk.parseBody(cm);
+                    result.addCommit(cm);
+                } else {
+                    System.out.println("Cm is null!" + cm);
+                }
+            }
+            return result;
         } finally {
             walk.dispose();
         }

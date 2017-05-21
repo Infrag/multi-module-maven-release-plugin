@@ -1,5 +1,6 @@
 package com.github.danielflower.mavenplugins.release;
 
+import com.github.danielflower.mavenplugins.release.report.trello.TrelloAuth;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
@@ -72,6 +73,17 @@ public abstract class BaseMojo extends AbstractMojo {
     @Parameter(defaultValue = "${settings}", readonly = true, required = true)
     private Settings settings;
 
+    @Parameter(property = "issueUrl")
+    public String issueUrl;
+
+    @Parameter(property = "trello")
+    public TrelloAuth trello;
+
+    @Parameter(property = "issueIdPrefix", defaultValue = "${")
+    public String issueIdPrefix;
+
+    @Parameter(property = "issueIdSuffix", defaultValue = "}")
+    public String issueIdSuffix;
     /**
      * If set, the identityFile and passphrase will be read from the Maven
      * settings file.

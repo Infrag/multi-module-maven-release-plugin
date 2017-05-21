@@ -1,5 +1,6 @@
 package com.github.danielflower.mavenplugins.release;
 
+import com.github.danielflower.mavenplugins.release.report.ChangeData;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
@@ -49,8 +50,8 @@ public class Reactor {
                 }
             }
 
-            Collection<Long> remoteBuildNumbers = getRemoteBuildNumbers(gitRepo, artifactId, versionWithoutBuildNumber);
-            previousBuildNumbers.addAll(remoteBuildNumbers);
+//            Collection<Long> remoteBuildNumbers = getRemoteBuildNumbers(gitRepo, artifactId, versionWithoutBuildNumber);
+//            previousBuildNumbers.addAll(remoteBuildNumbers);
 
             VersionName newVersion = versionNamer.name(project.getVersion(), buildNumber, previousBuildNumbers);
 
@@ -79,12 +80,14 @@ public class Reactor {
 
             String equivalentVersion = null;
 
+            ChangeData changeData = hasChangedSinceLastRelease(previousTagsForThisModule, detector, project, relativePathToModule);
+
             if (modulesToForceRelease != null && modulesToForceRelease.contains(artifactId)) {
                 log.info("Releasing " + artifactId + " " + newVersion.releaseVersion() + " as we was asked to forced release.");
             } else if (oneOfTheDependenciesHasChanged) {
                 log.info("Releasing " + artifactId + " " + newVersion.releaseVersion() + " as " + changedDependency + " has changed.");
             } else {
-                AnnotatedTag previousTagThatIsTheSameAsHEADForThisModule = hasChangedSinceLastRelease(previousTagsForThisModule, detector, project, relativePathToModule);
+                AnnotatedTag previousTagThatIsTheSameAsHEADForThisModule = changeData.hasChanged() ? tagWithHighestBuildNumber(previousTagsForThisModule) : null;
                 if (previousTagThatIsTheSameAsHEADForThisModule != null) {
                     equivalentVersion = previousTagThatIsTheSameAsHEADForThisModule.version() + "." + previousTagThatIsTheSameAsHEADForThisModule.buildNumber();
                     log.info("Will use version " + equivalentVersion + " for " + artifactId + " as it has not been changed since that release.");
@@ -92,7 +95,7 @@ public class Reactor {
                     log.info("Will use version " + newVersion.releaseVersion() + " for " + artifactId + " as it has changed since the last release.");
                 }
             }
-            ReleasableModule module = new ReleasableModule(project, newVersion, equivalentVersion, relativePathToModule, gitRepo);
+            ReleasableModule module = new ReleasableModule(project, newVersion, equivalentVersion, relativePathToModule, gitRepo, changeData);
             modules.add(module);
         }
 
@@ -168,11 +171,11 @@ public class Reactor {
         return relativePathToModule;
     }
 
-    static AnnotatedTag hasChangedSinceLastRelease(List<AnnotatedTag> previousTagsForThisModule, DiffDetector detector, MavenProject project, String relativePathToModule) throws MojoExecutionException {
+    static ChangeData hasChangedSinceLastRelease(List<AnnotatedTag> previousTagsForThisModule, DiffDetector detector, MavenProject project, String relativePathToModule) throws MojoExecutionException {
         try {
             if (previousTagsForThisModule.size() == 0) return null;
-            boolean hasChanged = detector.hasChangedSince(relativePathToModule, project.getModel().getModules(), previousTagsForThisModule);
-            return hasChanged ? null : tagWithHighestBuildNumber(previousTagsForThisModule);
+            ChangeData hasChanged = detector.hasChangedSince(relativePathToModule, project.getModel().getModules(), previousTagsForThisModule);
+            return hasChanged;
         } catch (Exception e) {
             throw new MojoExecutionException("Error while detecting whether or not " + project.getArtifactId() + " has changed since the last release", e);
         }

@@ -25,7 +25,7 @@ public class ReleasableModuleTest {
         project.setArtifactId("some-arty");
         project.setGroupId("some-group");
         ReleasableModule first = new ReleasableModule(
-            project, new VersionName("1.2.3-SNAPSHOT", "1.2.3", 12), "1.2.3.11", "somewhere", null);
+            project, new VersionName("1.2.3-SNAPSHOT", "1.2.3", 12), "1.2.3.11", "somewhere", null, null);
         assertThat(first.willBeReleased(), is(false));
 
         ReleasableModule changed = first.createReleasableVersion();

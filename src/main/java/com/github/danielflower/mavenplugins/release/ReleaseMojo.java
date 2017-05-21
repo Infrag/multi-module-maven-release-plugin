@@ -1,5 +1,7 @@
 package com.github.danielflower.mavenplugins.release;
 
+import com.github.danielflower.mavenplugins.release.report.ReportPrinter;
+import com.github.danielflower.mavenplugins.release.report.trello.TrelloLookupImpl;
 import org.apache.maven.model.Scm;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -9,10 +11,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.settings.io.DefaultSettingsWriter;
 import org.eclipse.jgit.api.errors.GitAPIException;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -103,11 +102,14 @@ public class ReleaseMojo extends BaseMojo {
     @Parameter(alias = "revertChanges", defaultValue = "true", property = "revert")
     private boolean revertChanges;
 
+    @Parameter(alias = "changes", defaultValue = "false", property = "onlyChanges")
+    private boolean onlyChanges;
+
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         Log log = getLog();
-
+        ReportPrinter report = new ReportPrinter(log, new TrelloLookupImpl(issueUrl, trello), issueIdPrefix, issueIdSuffix);
         try {
             configureJsch(log);
 
@@ -116,6 +118,11 @@ public class ReleaseMojo extends BaseMojo {
 
             Reactor reactor = Reactor.fromProjects(log, repo, project, projects, buildNumber, modulesToForceRelease, noChangesAction);
             if (reactor == null) {
+                return;
+            }
+
+            report.printChanges(reactor.getModulesInBuildOrder());
+            if (onlyChanges) {
                 return;
             }
 
@@ -153,6 +160,7 @@ public class ReleaseMojo extends BaseMojo {
                 }
             } finally {
                 revertChanges(log, updateResult.alteredModules, false); // warn if you can't revert but keep throwing the original exception so the root cause isn't lost
+                revertCommit(log, updateResult.alteredModules, false);
             }
 
 
@@ -195,21 +203,23 @@ public class ReleaseMojo extends BaseMojo {
         return GitHelper.scmUrlToRemote(remote);
     }
 
-    private static void revertChanges(Log log, LocalGitRepo repo, List<File> changedFiles, boolean throwIfError) throws MojoExecutionException {
-        if (!repo.revertChanges(log, changedFiles)) {
-            String message = "Could not revert changes - working directory is no longer clean. Please revert changes manually";
-            if (throwIfError) {
-                throw new MojoExecutionException(message);
-            } else {
-                log.warn(message);
-            }
-        }
-    }
-
     private static void revertChanges(Log log, List<ReleasableModule> modules, boolean throwIfError) throws MojoExecutionException {
         for (ReleasableModule module : modules) {
             if (!module.revertChanges(log)) {
                 String message = "Could not revert changes - working directory is no longer clean. Please revert changes manually";
+                if (throwIfError) {
+                    throw new MojoExecutionException(message);
+                } else {
+                    log.warn(message);
+                }
+            }
+        }
+    }
+
+    private static void revertCommit(Log log, List<ReleasableModule> modules, boolean throwIfError) throws MojoExecutionException {
+        for (ReleasableModule module : modules) {
+            if (!module.revertCommit(log)) {
+                String message = "Could not revert commit - working directory is no longer clean. Please revert changes manually";
                 if (throwIfError) {
                     throw new MojoExecutionException(message);
                 } else {
