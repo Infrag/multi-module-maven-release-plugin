@@ -26,9 +26,11 @@ public class ReportPrinter {
     public Log log;
 
     public StrSubstitutor strSubstitutor;
+    public String changelogLocation;
 
-    public ReportPrinter(Log log, StrLookup<String> strLookup, String issueIdPrefix, String issueIdSuffix) {
+    public ReportPrinter(Log log, StrLookup<String> strLookup, String issueIdPrefix, String issueIdSuffix, String changelogLocation) {
         this.log = log;
+        this.changelogLocation = changelogLocation;
         strSubstitutor = new StrSubstitutor(strLookup, issueIdPrefix, issueIdSuffix, StrSubstitutor.DEFAULT_ESCAPE);
     }
 
@@ -54,7 +56,7 @@ public class ReportPrinter {
     }
 
     public void printChanges(Iterable<ReleasableModule> modules) {
-        try (FileWriter fw = new FileWriter("changelog" + SUFFIX)) {
+        try (FileWriter fw = new FileWriter(changelogLocation)) {
             fw.write("## RELEASE - " + TODAY + "\n\n");
             for (ReleasableModule mod : modules) {
                 String moduleChangeLog = printChanges(mod);

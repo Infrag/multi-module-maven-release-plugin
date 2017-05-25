@@ -109,7 +109,7 @@ public class ReleaseMojo extends BaseMojo {
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         Log log = getLog();
-        ReportPrinter report = new ReportPrinter(log, new TrelloLookupImpl(issueUrl, trello), issueIdPrefix, issueIdSuffix);
+        ReportPrinter report = new ReportPrinter(log, new TrelloLookupImpl(trello), issueIdPrefix, issueIdSuffix, changelogLocation);
         try {
             configureJsch(log);
 

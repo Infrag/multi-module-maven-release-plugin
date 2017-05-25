@@ -79,6 +79,10 @@ public abstract class BaseMojo extends AbstractMojo {
     @Parameter(property = "trello")
     public TrelloAuth trello;
 
+    @Parameter(property = "changelogLocation", defaultValue="changelog.md")
+    public String changelogLocation;
+
+
     @Parameter(property = "issueIdPrefix", defaultValue = "${")
     public String issueIdPrefix;
 
