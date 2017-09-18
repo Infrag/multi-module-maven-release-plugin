@@ -121,7 +121,7 @@ public class PomUpdater {
         Properties projectProperties = project.getProperties();
         for (Dependency dependency : originalModel.getDependencies()) {
             String version = dependency.getVersion();
-            if (isSnapshot(resolveVersion(version, projectProperties))) {
+            if (isSnapshot(resolveVersion(version, projectProperties)) && !isTestScope(dependency)) {
                 try {
                     ReleasableModule dependencyBeingReleased = reactor.find(dependency.getGroupId(), dependency.getArtifactId(), version);
                     dependency.setVersion(dependencyBeingReleased.getVersionToDependOn());
@@ -152,6 +152,14 @@ public class PomUpdater {
 
     private static boolean isMultiModuleReleasePlugin(Plugin plugin) {
         return plugin.getGroupId().equals("com.github.infragile.mavenplugins") && plugin.getArtifactId().equals("multi-module-release-maven-plugin");
+    }
+
+    private boolean isTestScope(Dependency dep) {
+        String scope = dep.getScope();
+        if (scope != null) {
+            return scope.trim().toLowerCase().equals("test");
+        }
+        return false;
     }
 
     private boolean isSnapshot(String version) {

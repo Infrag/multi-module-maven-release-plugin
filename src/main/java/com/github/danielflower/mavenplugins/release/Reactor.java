@@ -87,7 +87,7 @@ public class Reactor {
             } else if (oneOfTheDependenciesHasChanged) {
                 log.info("Releasing " + artifactId + " " + newVersion.releaseVersion() + " as " + changedDependency + " has changed.");
             } else {
-                AnnotatedTag previousTagThatIsTheSameAsHEADForThisModule = changeData.hasChanged() ? tagWithHighestBuildNumber(previousTagsForThisModule) : null;
+                AnnotatedTag previousTagThatIsTheSameAsHEADForThisModule = changeData.hasChanged() ? null : tagWithHighestBuildNumber(previousTagsForThisModule);
                 if (previousTagThatIsTheSameAsHEADForThisModule != null) {
                     equivalentVersion = previousTagThatIsTheSameAsHEADForThisModule.version() + "." + previousTagThatIsTheSameAsHEADForThisModule.buildNumber();
                     log.info("Will use version " + equivalentVersion + " for " + artifactId + " as it has not been changed since that release.");
@@ -173,7 +173,7 @@ public class Reactor {
 
     static ChangeData hasChangedSinceLastRelease(List<AnnotatedTag> previousTagsForThisModule, DiffDetector detector, MavenProject project, String relativePathToModule) throws MojoExecutionException {
         try {
-            if (previousTagsForThisModule.size() == 0) return null;
+            if (previousTagsForThisModule.size() == 0) return new ChangeData();
             ChangeData hasChanged = detector.hasChangedSince(relativePathToModule, project.getModel().getModules(), previousTagsForThisModule);
             return hasChanged;
         } catch (Exception e) {
