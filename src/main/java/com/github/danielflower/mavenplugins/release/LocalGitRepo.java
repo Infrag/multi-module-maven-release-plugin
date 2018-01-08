@@ -144,8 +144,8 @@ public class LocalGitRepo {
         return GitHelper.hasLocalTag(git, tagName);
     }
 
-    public void commitChanges() throws GitAPIException {
-        git.commit().setAll(true).setMessage("Incremented versions").call();
+    public void commitChanges(String version) throws GitAPIException {
+        git.commit().setAll(true).setMessage("Incremented versions for " + version).call();
     }
 
     public void tagRepoAndPush(AnnotatedTag tag) throws GitAPIException {

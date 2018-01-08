@@ -70,7 +70,7 @@ public class ReleasableModule {
 
     public void tagAndPushRepo(Log log, boolean pushTags) throws GitAPIException {
         log.info("About to tag the repository with " + annotatedTag.name());
-        repo.commitChanges();
+        repo.commitChanges(getNewVersion());
         if (pushTags) {
             repo.tagRepoAndPush(annotatedTag);
         } else {

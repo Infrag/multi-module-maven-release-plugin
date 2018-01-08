@@ -18,7 +18,7 @@ import java.util.Date;
  * @author Ondrej.Bozek@clevermaps.cz
  **/
 public class ReportPrinter {
-    public static final String SUFFIX = ".md";
+    public static final String CHANGELOG_NAME = "CHANGELOG.md";
 
     public static final DateFormat df = new SimpleDateFormat("dd.MM.yyyy");
     public static final String TODAY = df.format(new Date());
@@ -35,7 +35,7 @@ public class ReportPrinter {
     }
 
     public void printModule(ReleasableModule module, String text) {
-        try (FileWriter fw = new FileWriter(Paths.get(module.getRelativePathToModule(), module.getArtifactId() + SUFFIX).toFile())) {
+        try (FileWriter fw = new FileWriter(Paths.get(module.getRelativePathToModule(), CHANGELOG_NAME).toFile())) {
             fw.write(text);
         } catch (IOException e) {
             throw new RuntimeException("Error printing module " + module.getArtifactId(), e);
